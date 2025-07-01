@@ -16,14 +16,26 @@ jobs:
           python-version: '3.13'
       - name: Install build tools
         run: |
-          python3 -m pip install --upgrade pip setuptools wheel
-          pip install build
+          sudo apt-get update
+          sudo apt-get install -y build-essential devscripts debhelper rpm python3-all python3-setuptools python3-flask python3-pip
+          python3 -m pip install --upgrade pip setuptools wheel build
       - name: Build sdist and wheel
         run: |
           python3 -m build
+      - name: Build deb package
+        run: |
+          dpkg-buildpackage -us -uc -b
+      - name: Build rpm package
+        run: |
+          mkdir -p rpmbuild/SOURCES
+          tar czf rpmbuild/SOURCES/co2-sensor-0.1.0.tar.gz --transform 's,^,co2-sensor-0.1.0/,' .
+          rpmbuild --define "_topdir $(pwd)/rpmbuild" -ba co2-sensor.spec
       - name: Upload Release Asset
         uses: softprops/action-gh-release@v2
         with:
-          files: dist/*
+          files: |
+            dist/*
+            ../co2-sensor_*.deb
+            rpmbuild/RPMS/noarch/co2-sensor-*.rpm
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
