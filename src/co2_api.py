@@ -9,7 +9,6 @@ import threading
 import fcntl
 import array
 import struct
-# 追加: GPIO解放のため
 try:
     import RPi.GPIO as GPIO
 except ImportError:
@@ -85,6 +84,8 @@ def get_co2():
                 continue
             else:
                 error_detail = str(e)
+                if GPIO:
+                    GPIO.cleanup()
                 break
     if co2_value is not None:
         return jsonify({
