@@ -29,7 +29,7 @@ install -D -m 644 co2-sensor.service $RPM_BUILD_ROOT%{_unitdir}/co2-sensor.servi
 %doc README.md
 %license LICENSE
 /usr/share/co2-sensor/*
-%{_unitdir}/co2-sensor.service
+/lib/systemd/system/co2-sensor.service
 
 %post
 /bin/systemctl daemon-reload || :
