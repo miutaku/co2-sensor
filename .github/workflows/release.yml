@@ -20,19 +20,28 @@ jobs:
           sudo apt-get install -y build-essential devscripts debhelper dh-python python3-all python3-setuptools python3-flask python3-pip rpm python3-rpm python3-pip-whl
           python3 -m pip install --upgrade pip setuptools wheel build
           sudo apt-get install -y python3 python3-flask python3-pip python3-setuptools
+      - name: Set APP_VERSION env
+        run: |
+          echo "APP_VERSION=${GITHUB_REF_NAME#v}" >> $GITHUB_ENV
       - name: Build sdist and wheel
         run: |
           python3 -m build
+        env:
+          APP_VERSION: ${{ env.APP_VERSION }}
       - name: Build deb package
         run: |
           dpkg-buildpackage -us -uc -b
+        env:
+          APP_VERSION: ${{ env.APP_VERSION }}
       - name: Build rpm package
         run: |
           sudo apt-get update
           sudo apt-get install -y python3 python3-flask python3-pip python3-setuptools
           mkdir -p rpmbuild/SOURCES
-          tar czf rpmbuild/SOURCES/co2-sensor-0.1.0.tar.gz --transform 's,^,co2-sensor-0.1.0/,' .
+          tar czf rpmbuild/SOURCES/co2-sensor-${{ env.APP_VERSION }}.tar.gz --transform "s,^,co2-sensor-${{ env.APP_VERSION }}/," .
           rpmbuild --define "_topdir $(pwd)/rpmbuild" --nodeps -ba co2-sensor.spec
+        env:
+          APP_VERSION: ${{ env.APP_VERSION }}
       - name: Upload Release Asset
         uses: softprops/action-gh-release@v2
         with:
