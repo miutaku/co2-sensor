@@ -12,7 +12,7 @@ Raspberry Pi用MH-Z19 CO2センサーAPIサーバ
 
 ## 設定ファイル
 
-パッケージインストール時、設定ファイルは `/usr/share/co2-sensor/src/settings.py` に配置されます。
+パッケージインストール時、設定ファイルは `/etc/co2-sensor/settings.py` に配置されます。
 
 ```
 # settings.py の例
@@ -22,7 +22,7 @@ WORKERS = 2            # gunicorn用ワーカ数
 ```
 
 - `PWM_PIN` は必須です。未設定の場合は起動時にエラーとなります。
-- 必要に応じて `/usr/share/co2-sensor/src/settings.py` を編集してください。
+- 必要に応じて `/etc/co2-sensor/settings.py` を編集してください。
 
 ## インストール
 
