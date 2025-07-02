@@ -7,6 +7,8 @@ import argparse
 import importlib.metadata
 import threading
 import fcntl
+import array
+import struct
 
 try:
     APP_VERSION = importlib.metadata.version("co2-sensor")
@@ -18,14 +20,39 @@ lock = threading.Lock()
 
 LOCK_FILE = '/tmp/co2_sensor.lock'
 
+def get_all_ipv4_addresses():
+    # すべてのIPv4アドレスを取得
+    ip_list = []
+    try:
+        max_possible = 128  # 十分な数のインターフェースを想定
+        bytes = max_possible * 32
+        s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        names = array.array('B', b'\0' * bytes)
+        outbytes = struct.unpack('iL', fcntl.ioctl(
+            s.fileno(), 0x8912,  # SIOCGIFCONF
+            struct.pack('iL', bytes, names.buffer_info()[0])
+        ))[0]
+        namestr = names.tobytes()
+        for i in range(0, outbytes, 40):
+            name = namestr[i:i+16].split(b'\0', 1)[0]
+            ip = namestr[i+20:i+24]
+            ip_addr = socket.inet_ntoa(ip)
+            if not ip_addr.startswith('127.') and ip_addr not in ip_list:
+                ip_list.append(ip_addr)
+        # ループバックも含める場合は下記を有効化
+        # for i in range(0, outbytes, 40):
+        #     ip = namestr[i+20:i+24]
+        #     ip_addr = socket.inet_ntoa(ip)
+        #     if ip_addr not in ip_list:
+        #         ip_list.append(ip_addr)
+    except Exception:
+        pass
+    return ip_list
+
 @app.route('/co2', methods=['GET'])
 def get_co2():
     hostname = socket.gethostname()
-    try:
-        addr_info = socket.getaddrinfo(hostname, None)
-        ip_addresses = list({item[4][0] for item in addr_info})
-    except Exception:
-        ip_addresses = []
+    ip_addresses = get_all_ipv4_addresses()
     retry = 0
     max_retry = 10
     co2_value = None
