@@ -37,6 +37,7 @@ jobs:
         run: |
           export DEBFULLNAME="GitHub Actions"
           export DEBEMAIL="actions@github"
+          rm -f debian/changelog
           dch --create -v "$APP_VERSION" --package co2-sensor "Release $APP_VERSION"
         env:
           APP_VERSION: ${{ env.APP_VERSION }}
