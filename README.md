@@ -12,14 +12,17 @@ Raspberry Pi用MH-Z19 CO2センサーAPIサーバ
 
 ## 設定ファイル
 
-パッケージインストール時、設定ファイルは `/usr/share/co2-sensor/config.yml` に配置されます。
+パッケージインストール時、設定ファイルは `/usr/share/co2-sensor/src/settings.py` に配置されます。
 
 ```
-pwm_pin: 12  # CO2センサーPWM信号を接続したRaspberry PiのGPIO番号（BCM番号）
+# settings.py の例
+PWM_PIN = 12  # CO2センサーPWM信号を接続したRaspberry PiのGPIO番号（BCM番号）
+BIND = '0.0.0.0:8080'  # gunicorn用バインドアドレス
+WORKERS = 2            # gunicorn用ワーカ数
 ```
 
-- `pwm_pin` は必須です。未設定の場合は起動時にエラーとなります。
-- 必要に応じて `/usr/share/co2-sensor/config.yml` を編集してください。
+- `PWM_PIN` は必須です。未設定の場合は起動時にエラーとなります。
+- 必要に応じて `/usr/share/co2-sensor/src/settings.py` を編集してください。
 
 ## インストール
 

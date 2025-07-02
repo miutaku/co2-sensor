@@ -4,48 +4,29 @@ import socket
 import fcntl
 import array
 import struct
-import argparse
 import importlib.metadata
 import threading
 from flask import Flask, jsonify
 import RPi.GPIO as GPIO
-import yaml
 
 try:
     APP_VERSION = importlib.metadata.version("co2-sensor")
 except Exception:
     APP_VERSION = os.environ.get("APP_VERSION") or "undefined"
 
+# 設定ファイル（settings.py）をインポート
+try:
+    import settings
+except ImportError:
+    raise RuntimeError('settings.py が見つかりません。')
+
 app = Flask(__name__)
 lock = threading.Lock()
 LOCK_FILE = '/tmp/co2_sensor.lock'
 
-# 設定ファイルのパス
-DEFAULT_CONFIG_PATH = '/etc/co2-sensor/config.yml'
-
-def load_config(config_path):
-    try:
-        with open(config_path, 'r') as f:
-            return yaml.safe_load(f)
-    except Exception:
-        return {}
-
-if __name__ == '__main__':
-    parser = argparse.ArgumentParser(description='CO2 Sensor API')
-    parser.add_argument('--version', action='store_true', help='Show version and exit')
-    parser.add_argument('--config', type=str, default=DEFAULT_CONFIG_PATH, help='Path to config.yml')
-    args = parser.parse_args()
-    if args.version:
-        print(APP_VERSION)
-        exit(0)
-    config_path = args.config
-else:
-    config_path = os.environ.get('CO2_SENSOR_CONFIG', '/etc/co2-sensor/config.yml')
-
-config = load_config(config_path)
-if 'pwm_pin' not in config:
-    raise RuntimeError(f'pwm_pin is not defined in config file: {config_path}')
-PWM_PIN = config['pwm_pin']
+PWM_PIN = getattr(settings, 'PWM_PIN', None)
+if PWM_PIN is None:
+    raise RuntimeError('PWM_PIN is not defined in settings.py')
 
 def read_co2_pwm(timeout=5):
     GPIO.setmode(GPIO.BCM)
