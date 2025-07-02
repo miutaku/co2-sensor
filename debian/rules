@@ -1,14 +1,3 @@
 #!/usr/bin/make -f
-export DH_PYCLEAN_EXCLUDES="/etc/co2-sensor /usr/share/co2-sensor"
 %:
 	dh $@ --buildsystem=pybuild
-
-override_dh_auto_clean:
-	dh_auto_clean
-	find debian/tmp/etc/co2-sensor -name '__pycache__' -type d -exec rm -rf {} + || true
-	find debian/tmp/usr/share/co2-sensor -name '__pycache__' -type d -exec rm -rf {} + || true
-
-override_dh_auto_install:
-	dh_auto_install
-	find debian/co2-sensor/etc/co2-sensor -name '__pycache__' -type d -exec rm -rf {} + || true
-	find debian/co2-sensor/usr/share/co2-sensor -name '__pycache__' -type d -exec rm -rf {} + || true
