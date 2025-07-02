@@ -39,6 +39,11 @@ if __name__ == '__main__':
         print(APP_VERSION)
         exit(0)
     config_path = args.config
+    config = load_config(config_path)
+    if 'pwm_pin' not in config:
+        raise RuntimeError(f'pwm_pin is not defined in config file: {config_path}')
+    PWM_PIN = config['pwm_pin']
+    app.run(host='0.0.0.0', port=8080)
 else:
     config_path = os.environ.get('CO2_SENSOR_CONFIG', '/etc/co2-sensor/config.yml')
 
