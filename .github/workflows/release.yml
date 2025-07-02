@@ -28,6 +28,11 @@ jobs:
           python3 -m build
         env:
           APP_VERSION: ${{ env.APP_VERSION }}
+      - name: Update debian/changelog version
+        run: |
+          sed -i "1s/(\$APP_VERSION)/("${APP_VERSION}")/" debian/changelog
+        env:
+          APP_VERSION: ${{ env.APP_VERSION }}
       - name: Build deb package
         run: |
           dpkg-buildpackage -us -uc -b
