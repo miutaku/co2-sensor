@@ -21,13 +21,14 @@ python3 setup.py build
 
 %install
 rm -rf $RPM_BUILD_ROOT
-python3 setup.py install --root=$RPM_BUILD_ROOT
+mkdir -p $RPM_BUILD_ROOT/usr/share/co2-sensor
+cp -r src/* $RPM_BUILD_ROOT/usr/share/co2-sensor/
 install -D -m 644 co2-sensor.service $RPM_BUILD_ROOT%{_unitdir}/co2-sensor.service
 
 %files
 %doc README.md
 %license LICENSE
-/usr/share/co2-sensor/
+/usr/share/co2-sensor/*
 %{_unitdir}/co2-sensor.service
 
 %post
