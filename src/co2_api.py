@@ -9,11 +9,6 @@ import threading
 import fcntl
 import array
 import struct
-# 追加: GPIO解放のため
-try:
-    import RPi.GPIO as GPIO
-except ImportError:
-    GPIO = None
 
 try:
     APP_VERSION = importlib.metadata.version("co2-sensor")
@@ -66,11 +61,7 @@ def get_co2():
         try:
             with open(LOCK_FILE, 'w') as lockfile:
                 fcntl.flock(lockfile, fcntl.LOCK_EX)
-                try:
-                    value = mh_z19.read_from_pwm()
-                finally:
-                    if GPIO:
-                        GPIO.cleanup()
+                value = mh_z19.read_from_pwm()
                 fcntl.flock(lockfile, fcntl.LOCK_UN)
             if value and 'co2' in value:
                 co2_value = value['co2']
