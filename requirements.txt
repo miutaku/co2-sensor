@@ -1,4 +1,3 @@
 Flask
 mh-z19
-psutil
-pyyaml
+PyYAML
