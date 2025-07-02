@@ -7,7 +7,7 @@ import struct
 import argparse
 import importlib.metadata
 import threading
-from flask import Flask, jsonify
+from flask import Flask, jsonify, current_app
 import RPi.GPIO as GPIO
 import yaml
 
@@ -23,6 +23,10 @@ LOCK_FILE = '/tmp/co2_sensor.lock'
 # 設定ファイルのパス
 DEFAULT_CONFIG_PATH = '/etc/co2-sensor/config.yml'
 
+# グローバル変数としてPWM_PINを用意
+PWM_PIN = None
+
+
 def load_config(config_path):
     try:
         with open(config_path, 'r') as f:
@@ -30,62 +34,31 @@ def load_config(config_path):
     except Exception:
         return {}
 
-if __name__ == '__main__':
-    parser = argparse.ArgumentParser(description='CO2 Sensor API')
-    parser.add_argument('--version', action='store_true', help='Show version and exit')
-    parser.add_argument('--config', type=str, default=DEFAULT_CONFIG_PATH, help='Path to config.yml')
-    args = parser.parse_args()
-    if args.version:
-        print(APP_VERSION)
-        exit(0)
-    config_path = args.config
-    config = load_config(config_path)
-    if 'pwm_pin' not in config:
-        raise RuntimeError(f'pwm_pin is not defined in config file: {config_path}')
-    PWM_PIN = config['pwm_pin']
-    app.run(host='0.0.0.0', port=8080)
-else:
-    config_path = os.environ.get('CO2_SENSOR_CONFIG', '/etc/co2-sensor/config.yml')
-
-config = load_config(config_path)
-if 'pwm_pin' not in config:
-    raise RuntimeError(f'pwm_pin is not defined in config file: {config_path}')
-PWM_PIN = config['pwm_pin']
 
 def read_co2_pwm(timeout=5):
     GPIO.setmode(GPIO.BCM)
     GPIO.setup(PWM_PIN, GPIO.IN)
     start_time = time.time()
-
     try:
-        # Wait for the first LOW signal
         while GPIO.input(PWM_PIN) == 1:
             if time.time() - start_time > timeout:
                 raise TimeoutError("Timeout waiting for LOW start")
         while GPIO.input(PWM_PIN) == 0:
             if time.time() - start_time > timeout:
                 raise TimeoutError("Timeout waiting for HIGH start")
-
         th_start = time.time()
-
         while GPIO.input(PWM_PIN) == 1:
             if time.time() - start_time > timeout:
                 raise TimeoutError("Timeout waiting for HIGH end")
-
         th_end = time.time()
-
         while GPIO.input(PWM_PIN) == 0:
             if time.time() - start_time > timeout:
                 raise TimeoutError("Timeout waiting for LOW end")
-
         tl_end = time.time()
-
         th = th_end - th_start
         tl = tl_end - th_end
-
         co2 = 5000 * th / (th + tl)
         return {'co2': round(co2, 1)}
-
     finally:
         GPIO.cleanup(PWM_PIN)
 
@@ -93,7 +66,7 @@ def read_co2_pwm(timeout=5):
 def get_all_ipv4_addresses():
     ip_list = []
     try:
-        max_possible = 128  # 十分な数のインターフェースを想定
+        max_possible = 128
         bytes = max_possible * 32
         s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         names = array.array('B', b'\0' * bytes)
@@ -156,3 +129,19 @@ def get_co2():
             'version': APP_VERSION,
             'error': error_detail
         }), 500
+
+if __name__ == '__main__':
+    parser = argparse.ArgumentParser(description='CO2 Sensor API')
+    parser.add_argument('--version', action='store_true', help='Show version and exit')
+    parser.add_argument('--config', type=str, default=DEFAULT_CONFIG_PATH, help='Path to config.yml')
+    args = parser.parse_args()
+    if args.version:
+        print(APP_VERSION)
+        exit(0)
+    config_path = args.config
+    config = load_config(config_path)
+    if 'pwm_pin' not in config:
+        raise RuntimeError(f'pwm_pin is not defined in config file: {config_path}')
+    global PWM_PIN
+    PWM_PIN = config['pwm_pin']
+    app.run(host='0.0.0.0', port=8080)
