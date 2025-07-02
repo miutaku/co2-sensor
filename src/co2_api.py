@@ -8,7 +8,7 @@ import argparse
 import importlib.metadata
 import threading
 from flask import Flask, jsonify
-from gpiozero import Button
+import RPi.GPIO as GPIO
 
 try:
     APP_VERSION = importlib.metadata.version("co2-sensor")
@@ -21,36 +21,34 @@ LOCK_FILE = '/tmp/co2_sensor.lock'
 
 PWM_PIN = 12  # BCM番号
 
-def read_co2_pwm(pin=PWM_PIN, timeout=5):
-    button = Button(pin)
+def read_co2_pwm(timeout=5):
+    GPIO.setmode(GPIO.BCM)
+    GPIO.setup(PWM_PIN, GPIO.IN)
+    start_time = time.time()
+
     try:
-        # LOW期間を測定
-        while button.is_pressed:
-            pass
-        while not button.is_pressed:
-            pass
-        start = time.time()
-        while button.is_pressed:
-            pass
-        end = time.time()
-        th = end - start
+        # HIGHになるのを待つ（センサ周期開始）
+        while GPIO.input(PWM_PIN) == 0:
+            if time.time() - start_time > timeout:
+                raise TimeoutError("Timeout waiting for PWM HIGH start")
+        while GPIO.input(PWM_PIN) == 1:
+            if time.time() - start_time > timeout:
+                raise TimeoutError("Timeout waiting for PWM HIGH end")
+        t_high_start = time.time()
 
-        # HIGH期間を測定
-        while not button.is_pressed:
-            pass
-        start = time.time()
-        while button.is_pressed:
-            pass
-        end = time.time()
-        tl = end - start
+        while GPIO.input(PWM_PIN) == 0:
+            if time.time() - start_time > timeout:
+                raise TimeoutError("Timeout waiting for PWM LOW end")
+        t_high_end = time.time()
 
-        if th + tl > 0:
-            co2 = 5000 * (th / (th + tl))
-            return {'co2': round(co2, 1)}
-        else:
-            return None
+        t_high = t_high_end - t_high_start
+        t_cycle = 1.0  # センサー仕様：1秒周期
+        co2 = 5000 * t_high / t_cycle
+        return {'co2': round(co2, 1)}
+
     finally:
-        button.close()  # 必ずGPIO解放
+        GPIO.cleanup(PWM_PIN)  # ピンだけクリーンアップ
+
 
 def get_all_ipv4_addresses():
     ip_list = []
