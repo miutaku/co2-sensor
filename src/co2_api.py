@@ -16,9 +16,11 @@ except Exception:
 
 # 設定ファイル（settings.py）をインポート
 try:
+    import sys
+    sys.path.insert(0, '/etc/co2-sensor')
     import settings
 except ImportError:
-    raise RuntimeError('settings.py が見つかりません。')
+    raise RuntimeError('settings.py が /etc/co2-sensor/ に見つかりません。')
 
 app = Flask(__name__)
 lock = threading.Lock()
