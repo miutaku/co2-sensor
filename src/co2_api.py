@@ -65,9 +65,7 @@ def get_co2():
             'hostname': hostname,
             'ip': ip_addresses,
             'version': APP_VERSION,
-            'error': {
-                'detail': error_detail
-            }
+            'error': error_detail
         }), 500
 
 if __name__ == '__main__':
