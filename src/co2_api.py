@@ -5,6 +5,7 @@ import time
 import os
 import argparse
 import importlib.metadata
+import threading
 
 try:
     APP_VERSION = importlib.metadata.version("co2-sensor")
@@ -12,6 +13,7 @@ except Exception:
     APP_VERSION = os.environ.get("APP_VERSION") or "undefined"
 
 app = Flask(__name__)
+lock = threading.Lock()
 
 @app.route('/co2', methods=['GET'])
 def get_co2():
@@ -26,7 +28,8 @@ def get_co2():
     error_detail = None
     while retry < max_retry:
         try:
-            value = mh_z19.read_from_pwm()
+            with lock:
+                value = mh_z19.read_from_pwm()
             if value and 'co2' in value:
                 co2_value = value['co2']
                 break
