@@ -6,6 +6,7 @@ import os
 import argparse
 import importlib.metadata
 import threading
+import fcntl
 
 try:
     APP_VERSION = importlib.metadata.version("co2-sensor")
@@ -14,6 +15,8 @@ except Exception:
 
 app = Flask(__name__)
 lock = threading.Lock()
+
+LOCK_FILE = '/tmp/co2_sensor.lock'
 
 @app.route('/co2', methods=['GET'])
 def get_co2():
@@ -28,8 +31,10 @@ def get_co2():
     error_detail = None
     while retry < max_retry:
         try:
-            with lock:
+            with open(LOCK_FILE, 'w') as lockfile:
+                fcntl.flock(lockfile, fcntl.LOCK_EX)
                 value = mh_z19.read_from_pwm()
+                fcntl.flock(lockfile, fcntl.LOCK_UN)
             if value and 'co2' in value:
                 co2_value = value['co2']
                 break
