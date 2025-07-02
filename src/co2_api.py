@@ -9,6 +9,7 @@ import importlib.metadata
 import threading
 from flask import Flask, jsonify
 import RPi.GPIO as GPIO
+import yaml
 
 try:
     APP_VERSION = importlib.metadata.version("co2-sensor")
@@ -19,7 +20,20 @@ app = Flask(__name__)
 lock = threading.Lock()
 LOCK_FILE = '/tmp/co2_sensor.lock'
 
-PWM_PIN = 12  # BCM番号
+# 設定ファイルのパス
+CONFIG_PATH = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'config.yml')
+
+def load_config():
+    try:
+        with open(CONFIG_PATH, 'r') as f:
+            return yaml.safe_load(f)
+    except Exception:
+        return {}
+
+config = load_config()
+if 'pwm_pin' not in config:
+    raise RuntimeError('pwm_pin is not defined in config.yml')
+PWM_PIN = config['pwm_pin']
 
 def read_co2_pwm(timeout=5):
     GPIO.setmode(GPIO.BCM)
@@ -27,7 +41,7 @@ def read_co2_pwm(timeout=5):
     start_time = time.time()
 
     try:
-        # LOW開始を待つ
+        # Wait for the first LOW signal
         while GPIO.input(PWM_PIN) == 1:
             if time.time() - start_time > timeout:
                 raise TimeoutError("Timeout waiting for LOW start")
