@@ -27,29 +27,32 @@ def read_co2_pwm(timeout=5):
     start_time = time.time()
 
     try:
-        while GPIO.input(PWM_PIN) == 0:
-            if time.time() - start_time > timeout:
-                raise TimeoutError("Timeout waiting for PWM HIGH start")
+        # LOW開始を待つ
         while GPIO.input(PWM_PIN) == 1:
             if time.time() - start_time > timeout:
-                raise TimeoutError("Timeout waiting for PWM HIGH end")
-        t_high_start = time.time()
-
+                raise TimeoutError("Timeout waiting for LOW start")
         while GPIO.input(PWM_PIN) == 0:
             if time.time() - start_time > timeout:
-                raise TimeoutError("Timeout waiting for PWM LOW end")
-        t_high_end = time.time()
+                raise TimeoutError("Timeout waiting for HIGH start")
+
+        th_start = time.time()
 
         while GPIO.input(PWM_PIN) == 1:
             if time.time() - start_time > timeout:
-                raise TimeoutError("Timeout waiting for next HIGH")
-        t_low_end = time.time()
+                raise TimeoutError("Timeout waiting for HIGH end")
 
-        t_high = t_high_end - t_high_start
-        t_low = t_low_end - t_high_end
-        t_cycle = t_high + t_low
+        th_end = time.time()
 
-        co2 = 5000 * (t_high / t_cycle)
+        while GPIO.input(PWM_PIN) == 0:
+            if time.time() - start_time > timeout:
+                raise TimeoutError("Timeout waiting for LOW end")
+
+        tl_end = time.time()
+
+        th = th_end - th_start
+        tl = tl_end - th_end
+
+        co2 = 5000 * th / (th + tl)
         return {'co2': round(co2, 1)}
 
     finally:
