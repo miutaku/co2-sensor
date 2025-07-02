@@ -1,6 +1,7 @@
+%define version %{?version}%{!?version:0.1.0}
 %define _unpackaged_files_terminate_build 0
 Name:           co2-sensor
-Version:        0.1.0
+Version:        %{version}
 Release:        1%{?dist}
 Summary:        CO2 sensor API for Raspberry Pi using mh_z19
 License:        MIT
