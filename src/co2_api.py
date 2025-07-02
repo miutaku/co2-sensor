@@ -27,7 +27,6 @@ def read_co2_pwm(timeout=5):
     start_time = time.time()
 
     try:
-        # HIGHになるのを待つ（センサ周期開始）
         while GPIO.input(PWM_PIN) == 0:
             if time.time() - start_time > timeout:
                 raise TimeoutError("Timeout waiting for PWM HIGH start")
@@ -41,13 +40,20 @@ def read_co2_pwm(timeout=5):
                 raise TimeoutError("Timeout waiting for PWM LOW end")
         t_high_end = time.time()
 
+        while GPIO.input(PWM_PIN) == 1:
+            if time.time() - start_time > timeout:
+                raise TimeoutError("Timeout waiting for next HIGH")
+        t_low_end = time.time()
+
         t_high = t_high_end - t_high_start
-        t_cycle = 1.0  # センサー仕様：1秒周期
-        co2 = 5000 * t_high / t_cycle
+        t_low = t_low_end - t_high_end
+        t_cycle = t_high + t_low
+
+        co2 = 5000 * (t_high / t_cycle)
         return {'co2': round(co2, 1)}
 
     finally:
-        GPIO.cleanup(PWM_PIN)  # ピンだけクリーンアップ
+        GPIO.cleanup(PWM_PIN)
 
 
 def get_all_ipv4_addresses():
