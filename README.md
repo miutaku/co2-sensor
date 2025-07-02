@@ -6,22 +6,22 @@ Raspberry Pi用MH-Z19 CO2センサーAPIサーバ
 
 このアプリケーションは、Raspberry Pi上でMH-Z19 CO2センサーから値を取得し、APIリクエストでJSON形式で返します。
 
-- Python 3.13対応
-- mh_z19ライブラリ利用
 - FlaskによるAPIサーバ（localhost:8080）
 - systemdサービス化対応
 - deb/rpmパッケージ化対応
-- GitHub Actionsでビルド＆リリース
+
+## 設定ファイル
+
+パッケージインストール時、設定ファイルは `/usr/share/co2-sensor/config.yml` に配置されます。
+
+```
+pwm_pin: 12  # CO2センサーPWM信号を接続したRaspberry PiのGPIO番号（BCM番号）
+```
+
+- `pwm_pin` は必須です。未設定の場合は起動時にエラーとなります。
+- 必要に応じて `/usr/share/co2-sensor/config.yml` を編集してください。
 
 ## インストール
-
-### 依存パッケージ
-
-```
-sudo apt update
-sudo apt install python3 python3-pip python3-flask python3-setuptools
-sudo pip3 install mh-z19
-```
 
 ### パッケージからインストール（推奨）
 
@@ -33,6 +33,17 @@ sudo dpkg -i co2-sensor_*.deb
 #### rpmパッケージ（Fedora/RHEL系）
 ```
 sudo dnf install ./co2-sensor-*.rpm
+```
+
+- 依存パッケージや systemd サービス登録も自動で行われます。
+- サービスは `co2-sensor` という名前で登録されます。
+
+### 依存パッケージ（手動インストールの場合のみ）
+
+```
+sudo apt update
+sudo apt install python3 python3-pip python3-flask python3-setuptools
+sudo pip3 install -r requirements.txt
 ```
 
 ## サービス起動
@@ -49,7 +60,11 @@ sudo systemctl start co2-sensor
 
 ```
 {
-  "co2": 605.0
+  "result": "ok",
+  "co2": 605.0,
+  "hostname": "raspberrypi",
+  "ip": ["192.168.1.10"],
+  "version": "1.2.3"
 }
 ```
 

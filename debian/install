@@ -1,2 +1,3 @@
 src/* usr/share/co2-sensor/
+etc/co2-sensor/config.yml etc/co2-sensor/
 co2-sensor.service lib/systemd/system/

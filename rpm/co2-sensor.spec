@@ -21,12 +21,14 @@ python3 setup.py build
 %install
 python3 setup.py install --root=%{buildroot} --optimize=1
 install -D -m 644 co2-sensor.service %{buildroot}/usr/lib/systemd/system/co2-sensor.service
+install -D -m 644 etc/co2-sensor/config.yml %{buildroot}/etc/co2-sensor/config.yml
 
 %files
 %license LICENSE
 %doc README.md
 /usr/share/co2-sensor/
 /usr/lib/systemd/system/co2-sensor.service
+/etc/co2-sensor/config.yml
 
 %changelog
 * Tue Jul 01 2025 Your Name <your@email.com> - 0.1.0-1

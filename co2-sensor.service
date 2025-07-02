@@ -6,7 +6,7 @@ After=network.target
 Type=simple
 User=root
 WorkingDirectory=/usr/share/co2-sensor
-ExecStart=/usr/bin/gunicorn -w 2 -b 0.0.0.0:8080 co2_api:app
+ExecStart=/usr/bin/gunicorn -w 2 -b 0.0.0.0:8080 co2_api:app --config=/etc/co2-sensor/config.yml
 Restart=always
 Environment=PYTHONUNBUFFERED=1
 

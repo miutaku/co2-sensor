@@ -21,18 +21,30 @@ lock = threading.Lock()
 LOCK_FILE = '/tmp/co2_sensor.lock'
 
 # 設定ファイルのパス
-CONFIG_PATH = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'config.yml')
+DEFAULT_CONFIG_PATH = '/etc/co2-sensor/config.yml'
 
-def load_config():
+def load_config(config_path):
     try:
-        with open(CONFIG_PATH, 'r') as f:
+        with open(config_path, 'r') as f:
             return yaml.safe_load(f)
     except Exception:
         return {}
 
-config = load_config()
+if __name__ == '__main__':
+    parser = argparse.ArgumentParser(description='CO2 Sensor API')
+    parser.add_argument('--version', action='store_true', help='Show version and exit')
+    parser.add_argument('--config', type=str, default=DEFAULT_CONFIG_PATH, help='Path to config.yml')
+    args = parser.parse_args()
+    if args.version:
+        print(APP_VERSION)
+        exit(0)
+    config_path = args.config
+else:
+    config_path = os.environ.get('CO2_SENSOR_CONFIG', '/etc/co2-sensor/config.yml')
+
+config = load_config(config_path)
 if 'pwm_pin' not in config:
-    raise RuntimeError('pwm_pin is not defined in config.yml')
+    raise RuntimeError(f'pwm_pin is not defined in config file: {config_path}')
 PWM_PIN = config['pwm_pin']
 
 def read_co2_pwm(timeout=5):
@@ -139,12 +151,3 @@ def get_co2():
             'version': APP_VERSION,
             'error': error_detail
         }), 500
-
-if __name__ == '__main__':
-    parser = argparse.ArgumentParser(description='CO2 Sensor API')
-    parser.add_argument('--version', action='store_true', help='Show version and exit')
-    args = parser.parse_args()
-    if args.version:
-        print(APP_VERSION)
-    else:
-        app.run(host='0.0.0.0', port=8080)
