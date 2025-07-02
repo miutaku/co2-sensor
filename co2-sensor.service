@@ -6,7 +6,7 @@ After=network.target
 Type=simple
 User=root
 WorkingDirectory=/usr/share/co2-sensor
-ExecStart=/usr/bin/python3 -m flask --app co2_api run --host=0.0.0.0 --port=8080
+ExecStart=/usr/local/bin/gunicorn -w 2 -b 0.0.0.0:8080 co2_api:app
 Restart=always
 Environment=PYTHONUNBUFFERED=1
 
