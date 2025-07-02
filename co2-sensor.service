@@ -5,8 +5,8 @@ After=network.target
 [Service]
 Type=simple
 User=root
-WorkingDirectory=/opt/co2-sensor
-ExecStart=/usr/bin/python3 -m flask --app src/co2_api run --host=0.0.0.0 --port=8080
+WorkingDirectory=/usr/share/co2-sensor
+ExecStart=/usr/bin/python3 -m flask --app co2_api run --host=0.0.0.0 --port=8080
 Restart=always
 Environment=PYTHONUNBUFFERED=1
 
