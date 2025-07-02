@@ -1,3 +1,7 @@
 #!/usr/bin/make -f
 %:
 	dh $@ --buildsystem=pybuild
+
+override_dh_auto_clean:
+	dh_auto_clean
+	find . -type d -name '__pycache__' -exec rm -rf {} + || true
