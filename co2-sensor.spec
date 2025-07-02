@@ -21,7 +21,7 @@ python3 setup.py build
 
 %install
 rm -rf $RPM_BUILD_ROOT
-python3 setup.py install --root=$RPM_BUILD_ROOT --install-layout=deb
+python3 setup.py install --root=$RPM_BUILD_ROOT
 install -D -m 644 co2-sensor.service $RPM_BUILD_ROOT%{_unitdir}/co2-sensor.service
 
 %files
