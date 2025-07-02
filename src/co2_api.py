@@ -4,8 +4,12 @@ import socket
 import time
 import os
 import argparse
+import importlib.metadata
 
-APP_VERSION = os.environ.get("APP_VERSION", "dev")
+try:
+    APP_VERSION = importlib.metadata.version("co2-sensor")
+except Exception:
+    APP_VERSION = os.environ.get("APP_VERSION") or "undefined"
 
 app = Flask(__name__)
 
