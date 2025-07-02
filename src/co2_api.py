@@ -1,15 +1,14 @@
-import mh_z19
-from flask import Flask, jsonify
-import socket
 import time
 import os
-import argparse
-import importlib.metadata
-import threading
+import socket
 import fcntl
 import array
 import struct
-import RPi.GPIO as GPIO
+import argparse
+import importlib.metadata
+import threading
+from flask import Flask, jsonify
+from gpiozero import Button
 
 try:
     APP_VERSION = importlib.metadata.version("co2-sensor")
@@ -18,11 +17,42 @@ except Exception:
 
 app = Flask(__name__)
 lock = threading.Lock()
-
 LOCK_FILE = '/tmp/co2_sensor.lock'
 
+PWM_PIN = 12  # BCM番号
+
+def read_co2_pwm(pin=PWM_PIN, timeout=5):
+    button = Button(pin)
+    try:
+        # LOW期間を測定
+        while button.is_pressed:
+            pass
+        while not button.is_pressed:
+            pass
+        start = time.time()
+        while button.is_pressed:
+            pass
+        end = time.time()
+        th = end - start
+
+        # HIGH期間を測定
+        while not button.is_pressed:
+            pass
+        start = time.time()
+        while button.is_pressed:
+            pass
+        end = time.time()
+        tl = end - start
+
+        if th + tl > 0:
+            co2 = 5000 * (th / (th + tl))
+            return {'co2': round(co2, 1)}
+        else:
+            return None
+    finally:
+        button.close()  # 必ずGPIO解放
+
 def get_all_ipv4_addresses():
-    # すべてのIPv4アドレスを取得
     ip_list = []
     try:
         max_possible = 128  # 十分な数のインターフェースを想定
@@ -30,22 +60,15 @@ def get_all_ipv4_addresses():
         s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         names = array.array('B', b'\0' * bytes)
         outbytes = struct.unpack('iL', fcntl.ioctl(
-            s.fileno(), 0x8912,  # SIOCGIFCONF
+            s.fileno(), 0x8912,
             struct.pack('iL', bytes, names.buffer_info()[0])
         ))[0]
         namestr = names.tobytes()
         for i in range(0, outbytes, 40):
-            name = namestr[i:i+16].split(b'\0', 1)[0]
             ip = namestr[i+20:i+24]
             ip_addr = socket.inet_ntoa(ip)
             if not ip_addr.startswith('127.') and ip_addr not in ip_list:
                 ip_list.append(ip_addr)
-        # ループバックも含める場合は下記を有効化
-        # for i in range(0, outbytes, 40):
-        #     ip = namestr[i+20:i+24]
-        #     ip_addr = socket.inet_ntoa(ip)
-        #     if ip_addr not in ip_list:
-        #         ip_list.append(ip_addr)
     except Exception:
         pass
     return ip_list
@@ -62,8 +85,7 @@ def get_co2():
         try:
             with open(LOCK_FILE, 'w') as lockfile:
                 fcntl.flock(lockfile, fcntl.LOCK_EX)
-                GPIO.cleanup()  # CO2値取得直前にGPIOをクリーンアップ
-                value = mh_z19.read_from_pwm()
+                value = read_co2_pwm()
                 fcntl.flock(lockfile, fcntl.LOCK_UN)
             if value and 'co2' in value:
                 co2_value = value['co2']
