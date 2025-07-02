@@ -16,6 +16,10 @@ app = Flask(__name__)
 @app.route('/co2', methods=['GET'])
 def get_co2():
     hostname = socket.gethostname()
+    try:
+        ip_address = socket.gethostbyname(hostname)
+    except Exception:
+        ip_address = None
     retry = 0
     max_retry = 10
     co2_value = None
@@ -42,6 +46,7 @@ def get_co2():
             'result': 'ok',
             'co2': co2_value,
             'hostname': hostname,
+            'ip': ip_address,
             'version': APP_VERSION
         }), 200
     else:
@@ -49,6 +54,7 @@ def get_co2():
             'result': 'error',
             'co2': None,
             'hostname': hostname,
+            'ip': ip_address,
             'version': APP_VERSION,
             'error': {
                 'detail': error_detail
