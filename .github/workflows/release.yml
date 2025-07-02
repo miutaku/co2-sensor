@@ -33,6 +33,13 @@ jobs:
           sed -i "1s/(\$APP_VERSION)/("${APP_VERSION}")/" debian/changelog
         env:
           APP_VERSION: ${{ env.APP_VERSION }}
+      - name: Generate debian/changelog
+        run: |
+          export DEBFULLNAME="GitHub Actions"
+          export DEBEMAIL="actions@github"
+          dch --create -v "$APP_VERSION" --package co2-sensor "Release $APP_VERSION"
+        env:
+          APP_VERSION: ${{ env.APP_VERSION }}
       - name: Build deb package
         run: |
           dpkg-buildpackage -us -uc -b
