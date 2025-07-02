@@ -1,12 +1,10 @@
-%define version %{?version}%{!?version:0.1.0}
-%define _unpackaged_files_terminate_build 0
 Name:           co2-sensor
-Version:        %{version}
+Version:        %{?version}
 Release:        1%{?dist}
 Summary:        CO2 sensor API for Raspberry Pi using mh_z19
 License:        MIT
 URL:            https://github.com/yourname/co2-sensor
-Source0:        %{name}-%{version}.tar.gz
+Source0:        %{name}-%{?version}.tar.gz
 BuildArch:      noarch
 BuildRequires:  python3, python3-setuptools, python3-flask, python3-pip
 Requires:       python3, python3-flask, python3-pip
