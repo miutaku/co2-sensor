@@ -22,9 +22,10 @@ LOCK_FILE = '/tmp/co2_sensor.lock'
 def get_co2():
     hostname = socket.gethostname()
     try:
-        ip_address = socket.gethostbyname(hostname)
+        addr_info = socket.getaddrinfo(hostname, None)
+        ip_addresses = list({item[4][0] for item in addr_info})
     except Exception:
-        ip_address = None
+        ip_addresses = []
     retry = 0
     max_retry = 10
     co2_value = None
@@ -54,7 +55,7 @@ def get_co2():
             'result': 'ok',
             'co2': co2_value,
             'hostname': hostname,
-            'ip': ip_address,
+            'ip': ip_addresses,
             'version': APP_VERSION
         }), 200
     else:
@@ -62,7 +63,7 @@ def get_co2():
             'result': 'error',
             'co2': None,
             'hostname': hostname,
-            'ip': ip_address,
+            'ip': ip_addresses,
             'version': APP_VERSION,
             'error': {
                 'detail': error_detail
