@@ -3,7 +3,7 @@ Version:        %{?version}
 Release:        1%{?dist}
 Summary:        CO2 sensor API for Raspberry Pi using mh_z19
 License:        MIT
-URL:            https://github.com/yourname/co2-sensor
+URL:            https://github.com/miutaku/co2-sensor
 Source0:        %{name}-%{?version}.tar.gz
 BuildArch:      noarch
 BuildRequires:  python3, python3-setuptools, python3-flask, python3-pip
